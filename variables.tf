@@ -17,18 +17,6 @@ variable "accounts" {
     }
 }
 
-# variable "vpc_id" {
-#   description = "The VPC ID where resources will be deployed"
-#   type        = string
-#   default     = "vpc-05b6bd3414e30ee87"
-# } 
-
-variable "db_password" {
-  description = "The password for the database"
-  type        = string
-  sensitive   = true
-}
-
 variable "rds_instance_properties" {
   description = "A map of RDS instance properties"
   type        = map(string)
@@ -87,7 +75,7 @@ variable "ec2_properties" {
 }
 
 variable "public_key_path" {
-  description = "Path to the public key file (.pub) used to create the AWS key pair. Can be relative to the module directory or absolute."
+  description = "Path to the public key file (.pub) used to create the AWS key pair."
   type        = string
   default     = "./clixx-kp.pub"
 }

@@ -23,8 +23,3 @@ resource "aws_ssm_parameter" "clixx_dns" {
   value = aws_route53_record.clixx_dns.name
 }
 
-resource "aws_ssm_parameter" "clixxdb_password" {
-  name  = "clixxdb-pass"
-  type  = "String"
-  value = var.db_password
-}
