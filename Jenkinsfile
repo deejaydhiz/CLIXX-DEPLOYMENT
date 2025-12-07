@@ -26,7 +26,9 @@ pipeline {
 
     stage('terraform plan'){
       steps {
-        sh 'terraform plan -out=tfplan -input=false'
+        withAWS(credentials: 'stack_prog_uat', region: 'us-east-1') {
+          sh 'terraform plan -out=tfplan -input=false'
+        }
       }
     }
     
