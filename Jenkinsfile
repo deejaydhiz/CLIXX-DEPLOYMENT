@@ -1,7 +1,8 @@
 pipeline {
   agent any
   parameters {
-    credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_uat', name: 'AWS', required: false
+    credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_uat', name: 'stack_prog_uat', required: false
+    credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog', description: 'stack_prog user access keys', name: 'stack_prog', required: false
   }
 
   environment {

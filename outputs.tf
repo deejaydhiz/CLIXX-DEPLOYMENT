@@ -8,5 +8,5 @@
 
 # Output the public IP address
 output "my_public_ip_address" {
-  value = chomp(data.http.my_public_ip.body)
+  value = chomp(data.http.my_public_ip.response_body)
 }
