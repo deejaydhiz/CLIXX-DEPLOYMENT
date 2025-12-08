@@ -13,7 +13,8 @@ pipeline {
     stage('Initial Deployment Approval') {
       steps {
         script {
-          def userInput = input(id: 'initial_confirm', message: 'Start Pipeline?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Start Pipeline', name: 'confirm'] ])
+          // def userInput = input(id: 'initial_confirm', message: 'Start Pipeline?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Start Pipeline', name: 'confirm'] ])
+          input(message: 'Start Pipeline?')
         }
       }
     }
@@ -35,27 +36,25 @@ pipeline {
         }
       }
     }
-    
 
-    //   steps {
-    //     withAWS(credentials: 'stack_prog_aut', region: 'us-east-1') {
-    //       sh 'terraform plan -out=tfplan -input=false'
-    //     }
-    //   }
-    // }
-    
     stage('Final Deployment Approval') { 
       steps { 
         script { 
-          def userInput = input(id: 'final_confirm', message: 'Apply Terraform?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply terraform', name: 'confirm'] ]) 
+          // def userInput = input(id: 'final_confirm', message: 'Apply Terraform?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply terraform', name: 'confirm'] ]) 
+          input(message: 'Apply Terraform?')
         } 
       } 
     }
 
     stage('Terraform Apply'){ 
       steps {
-        sh "terraform apply -input=false tfplan" 
-      } 
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
+        ]) {
+          sh "terraform apply -input=false tfplan" 
+        } 
+      }
     }
   }
 }
