@@ -14,6 +14,7 @@ variable "accounts" {
     default = {
         dev     = "186769093804"
         uat     = "961424819918"
+        mgmt    = "651974166650"
     }
 }
 
