@@ -29,7 +29,7 @@ pipeline {
         // Bind credentials specific to this stage's execution
         withCredentials([
           [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_SHARED', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_SHARED']
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
         ]) {
           sh 'terraform plan -out=tfplan -input=false'
         }
