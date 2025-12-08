@@ -28,20 +28,17 @@ pipeline {
 
     stage('terraform plan'){
       steps {
-        // // Bind credentials specific to this stage's execution
-        // withCredentials([
-        //   [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        //   // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
-        // ]) {
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+        ]) {
           sh 'terraform plan -out=tfplan -input=false'
-        // }
+        }
       }
     }
 
     stage('Final Deployment Approval') { 
       steps { 
         script { 
-          // def userInput = input(id: 'final_confirm', message: 'Apply Terraform?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Apply terraform', name: 'confirm'] ]) 
           input(message: 'Apply Terraform?')
         } 
       } 
@@ -49,13 +46,12 @@ pipeline {
 
     stage('Terraform Apply'){ 
       steps {
-        // withCredentials([
-        //   [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        //   // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
-        // ]) {
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+        ]) {
           sh "terraform apply -input=false tfplan" 
           slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        // } 
+        } 
       }
     }
   }
