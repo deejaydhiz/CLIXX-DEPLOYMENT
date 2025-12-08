@@ -1,9 +1,9 @@
 pipeline {
   agent any
-  parameters {
-    credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'stack_prog_aut', required: false
-    credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog', description: 'stack_prog user access keys', name: 'stack_prog', required: false
-  }
+  // parameters {
+  //   credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'stack_prog_aut', required: false
+  //   credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog', description: 'stack_prog user access keys', name: 'stack_prog', required: false
+  // }
 
   environment {
     PATH = "${PATH}:${getTerraformPath()}"
