@@ -1,8 +1,6 @@
 pipeline {
   agent any
-  // parameters {
-  //   credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'stack_prog_aut', required: false
-  // }
+
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
   }
@@ -30,13 +28,13 @@ pipeline {
 
     stage('terraform plan'){
       steps {
-        // // Bind credentials specific to this stage's execution
-        // withCredentials([
-        //   [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        //   // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
-        // ]) {
+        // Bind credentials specific to this stage's execution
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+          // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
+        ]) {
           sh 'terraform plan -out=tfplan -input=false'
-        // }
+        }
       }
     }
 
@@ -51,13 +49,13 @@ pipeline {
 
     stage('Terraform Apply'){ 
       steps {
-        // withCredentials([
-        //   [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        //   // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
-        // ]) {
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.AUTO_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+          // [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: env.MGMT_USER_CREDS_ID, accessKeyVariable: 'AWS_ACCESS_KEY_ID_MANAGEMENT', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY_MANAGEMENT']
+        ]) {
           sh "terraform apply -input=false tfplan" 
           slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        // } 
+        } 
       }
     }
   }
