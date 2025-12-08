@@ -50,8 +50,14 @@ pipeline {
           [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
         ]) {
           sh "terraform apply -input=false tfplan" 
-          slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+          slackSend (color: '#FFFF00', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         } 
+      }
+    }
+
+    stage('Terraform Destroy'){
+      steps {
+        sh "terraform destroy -auto-approve"
       }
     }
   }
