@@ -1,4 +1,3 @@
-
 # Configure the AWS Provider
 provider "aws" {
   region = "us-east-1"
@@ -13,5 +12,5 @@ provider "aws" {
   alias  = "management"
   region = "us-east-1"
 
-  profile = "stack_prog" 
+#  profile = "stack_prog" 
 }

@@ -74,8 +74,6 @@ resource "aws_route53_record" "clixx_dns" {
 ### Create keypair ###
 resource "aws_key_pair" "clixx_kp" {
   key_name   = "clixx-kp"
-  # Read the public key from a path provided via variable. Place the .pub file in the repo
-  # or pass its path via -var "public_key_path=./keys/clixx-kp.pub" from CI.
   public_key = file(var.public_key_path)
 }
 
