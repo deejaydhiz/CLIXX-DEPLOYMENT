@@ -3,6 +3,9 @@ pipeline {
 
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
+    booleanParam(name: 'BUILD_AMI', defaultValue: true)
+    booleanParam(name: 'DESTROY', defaultValue: false)
+    string defaultValue: 'DEJI', name: 'RUNNER'
   }
 
   environment {
@@ -10,65 +13,57 @@ pipeline {
   }
 
   stages {
-    stage('Initial Deployment Approval') {
+    stage('Packer AMI Build'){
+      when {
+        expression { params.BUILD_AMI }
+      }
       steps {
-        script {
-          // def userInput = input(id: 'initial_confirm', message: 'Start Pipeline?', parameters: [ [$class: 'BooleanParameterDefinition', defaultValue: false, description: 'Start Pipeline', name: 'confirm'] ])
-          input(message: 'Start Pipeline?')
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+        ]) {
+          slackSend (color: '#ffae00ff', message: "STARTING PACKER IMAGE BUILD: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
+          sh '''
+          packer init -upgrade .
+          packer validate golden_img.pkr.hcl
+          sed -i "s/deji-clixx-ami-[0-9]*/deji-clixx-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
+          export PACKER_LOG=1
+          export PACKER_LOG_PATH=$WORKSPACE/packer.log
+          /usr/bin/packer build -force golden_img.pkr.hcl 
+          '''    
         }
       }
     }
 
     stage('terraform init') {
       steps {
-        slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        sh 'terraform init -migrate-state'
+        slackSend (color: '#d0ff00ff', message: "${params.RUNNER} STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        sh 'terraform init'
       }
     }
 
-    stage('terraform plan'){
+    stage('terraform plan and apply'){
       steps {
         withCredentials([
           [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
         ]) {
+          slackSend (color: '#15ff00ff', message: "GENERATING PLAN: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
           sh 'terraform plan -out=tfplan -input=false'
-        }
-      }
-    }
-
-    stage('Final Deployment Approval') { 
-      steps { 
-        script { 
-          input(message: 'Apply Terraform?')
-        } 
-      } 
-    }
-
-    stage('Terraform Apply'){ 
-      steps {
-        withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        ]) {
           sh "terraform apply -input=false tfplan" 
-          slackSend (color: '#FFFF00', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+          slackSend (color: '#0400ffff', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         } 
       }
     }
 
-    stage('Terraform Destroy Approval') { 
-      steps { 
-        script { 
-          input(message: 'Destroy Terraform build?')
-        } 
-      } 
-    }
-
-    stage('Terraform Destroy'){
+    stage('terraform destroy'){
+      when {
+        expression { params.DESTROY }
+      }
       steps {
         withCredentials([
           [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
         ]) {
-          sh "terraform destroy"
+          sh "terraform destroy -auto-approve"
+          slackSend (color: '#ff000dff', message: "DESTROYED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
         }
       }
     }
