@@ -104,5 +104,5 @@ variable "private_subnet_cidr" {
 }
 
 variable "ami_name" {
-  default = "deji-clixx-ami-*"
+  default = "deji-stack-ami-*"
 }

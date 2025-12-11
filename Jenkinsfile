@@ -3,7 +3,7 @@ pipeline {
 
   parameters {
     credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
-    booleanParam(name: 'BUILD_AMI', defaultValue: true)
+    booleanParam(name: 'BUILD_AMI', defaultValue: false)
     booleanParam(name: 'DESTROY', defaultValue: false)
     string defaultValue: 'DEJI', name: 'RUNNER'
   }
@@ -25,7 +25,7 @@ pipeline {
           sh '''
           packer init -upgrade .
           packer validate golden_img.pkr.hcl
-          sed -i "s/deji-clixx-ami-[0-9]*/deji-clixx-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
+          sed -i "s/deji-stack-ami-[0-9]*/deji-stack-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
           export PACKER_LOG=1
           export PACKER_LOG_PATH=$WORKSPACE/packer.log
           /usr/bin/packer build -force golden_img.pkr.hcl 
