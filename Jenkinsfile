@@ -22,7 +22,7 @@ pipeline {
     stage('terraform init') {
       steps {
         slackSend (color: '#FFFF00', message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-        sh 'terraform init'
+        sh 'terraform init -migrate-state'
       }
     }
 
@@ -55,15 +55,15 @@ pipeline {
       }
     }
 
-    stage('Terraform Destroy'){
-      steps {
-        withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        ]) {
-          sh "terraform destroy -auto-approve"
-        }
-      }
-    }
+    // stage('Terraform Destroy'){
+    //   steps {
+    //     withCredentials([
+    //       [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+    //     ]) {
+    //       sh "terraform destroy"
+    //     }
+    //   }
+    // }
   }
 }
 
