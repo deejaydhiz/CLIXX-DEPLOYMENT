@@ -16,4 +16,3 @@ resource "aws_ssm_parameter" "dns" {
   type  = "String"
   value = aws_route53_record.this.name
 }
-
