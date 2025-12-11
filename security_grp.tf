@@ -1,60 +1,115 @@
-# Create the security group for the clixx deployment
+# Public SG (for bastion / web instances) - allows HTTP and SSH from internet
+resource "aws_security_group" "public_sg" {
+  name        = "${var.project_name}-public-sg"
+  description = "Allow SSH/HTTP from Internet"
+  vpc_id      = aws_vpc.this.id
 
-resource "aws_security_group" "clixx_sg" {
-  name        = var.sg_name
-  description = "This is the security group for the clixx deployment"
-  vpc_id      = data.aws_vpc.main.id
-  tags        = var.tags
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${chomp(data.http.my_public_ip.response_body)}/32"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-public-sg" }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_http" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow http access"
-  cidr_ipv4   = "0.0.0.0/0"
-  from_port   = 80
-  ip_protocol = "tcp"
-  to_port     = 80
+# App/Private SG - instances in private subnets (e.g. app servers)
+resource "aws_security_group" "app_sg" {
+  name        = "${var.project_name}-app-sg"
+  description = "Security group for application servers (private subnets)"
+  vpc_id      = aws_vpc.this.id
+
+  # Allow SSH from admin CIDR (optional). For now only allow SSH from public SG (bastion).
+  ingress {
+    description     = "SSH from bastion and admin"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.public_sg.id]
+  }
+
+  # Allow HTTP from public SG
+  ingress {
+    description = "HTTP from the public subnet"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    security_groups = [aws_security_group.public_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-app-sg" }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_https" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow https access"
-  cidr_ipv4   = "0.0.0.0/0"
-  from_port   = 443
-  ip_protocol = "tcp"
-  to_port     = 443
+# RDS SG - allows DB traffic from app_sg
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.project_name}-rds-sg"
+  description = "Allow DB access from app servers"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "DB access from App servers"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-rds-sg" }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_rds" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow RDS connection access"
-  cidr_ipv4   = data.aws_vpc.main.cidr_block 
-  from_port   = 3306
-  ip_protocol = "tcp"
-  to_port     = 3306
+# EFS SG - allow NFS from app servers (or other instances in private subnets)
+resource "aws_security_group" "efs_sg" {
+  name        = "${var.project_name}-efs-sg"
+  description = "Allow NFS (EFS) traffic from app servers"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description     = "NFS from App servers"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-efs-sg" }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "allow_nfs" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow EFS access"
-  cidr_ipv4   = data.aws_vpc.main.cidr_block
-  from_port   = 2049
-  ip_protocol = "tcp"
-  to_port     = 2049
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow SSH access"
-  cidr_ipv4   = "${chomp(data.http.my_public_ip.response_body)}/32"
-  from_port   = 22
-  ip_protocol = "tcp"
-  to_port     = 22
-}
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-  security_group_id = aws_security_group.clixx_sg.id
-  description = "Allow all outbound traffic"
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" # semantically equivalent to all ports
-}

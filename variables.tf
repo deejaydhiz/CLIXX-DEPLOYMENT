@@ -22,12 +22,11 @@ variable "rds_instance_properties" {
   description = "A map of RDS instance properties"
   type        = map(string)
   default = {
-    identifier          = "clixx-db"
     username            = "admin"
     instance_class      = "db.t4g.micro"
-    publicly_accessible = "true"
+    publicly_accessible = false
     snapshot_identifier = "clixxwordpressdb"
-    skip_final_snapshot = "true"
+    skip_final_snapshot = true
   }
 } 
 
@@ -35,6 +34,12 @@ variable "aws_region" {
   description = "This is the AWS region to build the resources"
   type = string
   default = "us-east-1"
+}
+
+variable project_name {
+  description = "The project name"
+  type = string
+  default = "clixx"
 }
 
 variable "tags" {
@@ -51,25 +56,13 @@ variable "tags" {
   }
 }
 
-variable "vpc_id" {
-  description = "The VPC ID where resources will be deployed"
-  type        = string
-  default     = true
-}
-
-variable "sg_name" {
-  description = "The name of the security group for the clixx deployment"
-  type        = string
-  default     = "Clixx_SG"
-}
-
 variable "ec2_properties" {
   description = "A map of EC2 instance properties"
   type        = map(string)
   default = {
     name                    = "clixx-web"
-    instance_type           = "t2.micro"
-    ami_id                  = "ami-0cae6d6fe6048ca2c"
+    instance_type           = "t3.micro"
+    ami_id                  = "ami-08d7aabbb50c2c24e"
     key_name                = "clixx-kp"
     iam_instance_profile    = "IAM_instance_profile"
   }
@@ -88,4 +81,28 @@ variable "efs_properties" {
     creation_token = "clixx-EFS"
     encrypted      = true
   }
+}
+
+variable "vpc_cidr" {
+  type    = string
+  default = "10.0.0.0/16"
+}
+
+variable "azs" {
+  type    = list(string)
+  default = ["us-east-1a", "us-east-1b"]
+}
+
+variable "public_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.0.0/24", "10.0.1.0/24"]
+}
+
+variable "private_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.2.0/24", "10.0.3.0/24"]
+}
+
+variable "ami_name" {
+  default = "deji-stack-ami"
 }

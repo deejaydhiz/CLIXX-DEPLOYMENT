@@ -1,24 +1,5 @@
 #!/bin/bash
 
-echo "Installing Dependencies"
-echo "======================================================================"
-sudo dnf upgrade -y
-sudo dnf install mariadb105-server httpd wget php-mysqlnd php-fpm php-mysqli php-json php php-devel -y
-sudo dnf install -y nfs-utils git cronie
-echo "======================================================================"
-
-echo "Starting Services"
-sudo systemctl start httpd mariadb crond
-sudo systemctl enable httpd mariadb crond
-echo "======================================================================"
-
-echo "Setting Permissions"
-sudo usermod -a -G apache ec2-user   
-sudo chown -R ec2-user:apache /var/www     
-sudo chmod 2775 /var/www && find /var/www -type d -exec sudo chmod 2775 {} \;   
-find /var/www -type f -exec sudo chmod 0664 {} \;    
-echo "======================================================================"
-
 #EFS CREATION AND MOUNTING
 echo "Mounting EFS"
 EFS=$(aws ssm get-parameter --name clixxdb-EFS --query Parameter.Value --output text)
@@ -86,7 +67,7 @@ echo "fi" >> /var/www/html/wp-config_check.sh
 
 chmod +x /var/www/html/wp-config_check.sh   
 
-TS=$(date +%Y%m%d%H%M)
+TS=$(date +%Y%m%d)
 
 # write out current crontab
 crontab -l > mycron

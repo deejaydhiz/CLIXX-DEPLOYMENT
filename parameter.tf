@@ -1,25 +1,19 @@
 ### Create parameters in Parameter store for use in clixx user data ###
-resource "aws_ssm_parameter" "clixx_lb" {
-  name  = "clixxdb-LB"
+resource "aws_ssm_parameter" "db_endpoint" {
+  name  = "${var.project_name}db-host"
   type  = "String"
-  value = aws_lb.clixx_lb.dns_name
+  value = aws_db_instance.this.address
 }
 
-resource "aws_ssm_parameter" "clixxdb_endpoint" {
-  name  = "clixxdb-host"
+resource "aws_ssm_parameter" "efs" {
+  name  = "${var.project_name}db-EFS"
   type  = "String"
-  value = aws_db_instance.clixx_db.address
+  value = aws_efs_file_system.this.dns_name
 }
 
-resource "aws_ssm_parameter" "clixx_efs" {
-  name  = "clixxdb-EFS"
+resource "aws_ssm_parameter" "dns" {
+  name  = "${var.project_name}db-DNS"
   type  = "String"
-  value = aws_efs_file_system.clixx_efs.dns_name
-}
-
-resource "aws_ssm_parameter" "clixx_dns" {
-  name  = "clixxdb-DNS"
-  type  = "String"
-  value = aws_route53_record.clixx_dns.name
+  value = aws_route53_record.this.name
 }
 
