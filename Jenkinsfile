@@ -36,12 +36,14 @@ pipeline {
     stage('Terraform Apply'){
       steps {
         script {
-          if (params.DEPLOY == 'apply') 
+          if (params.DEPLOY == 'apply') {
             sh "terraform apply -input=false tfplan" 
             slackSend (color: '#0400ffff', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
-          } else if (params.DEPLOY == 'destroy') {
+          }
+          else if (params.DEPLOY == 'destroy') {
             sh "terraform destroy -auto-approve"
             slackSend (color: '#ff000dff', message: "DESTROYED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
+          }
         }
       }
     }
