@@ -15,6 +15,7 @@ resource "aws_internet_gateway" "igw" {
 # Creating public subnet
 resource "aws_subnet" "public_sub" {
   count                   = length(var.public_subnet_cidr)
+  # for_each                = 
   vpc_id                  = aws_vpc.this.id
   cidr_block              = var.public_subnet_cidr[count.index]
   availability_zone       = element(var.azs, count.index)
