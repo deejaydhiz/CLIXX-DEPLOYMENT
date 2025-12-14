@@ -21,7 +21,7 @@ pipeline {
 
     stage('Terraform Validate') {
       steps {
-        slackSend (color: '#d0ff00ff', message: "${params.RUNNER} VALIDATED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        slackSend (color: '#d9ff00ff', message: "${params.RUNNER} VALIDATED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         sh 'terraform validate'
       }
     }

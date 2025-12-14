@@ -10,7 +10,7 @@ data "http" "my_public_ip" {
 }
 
 data "aws_ami" "amazon_linux" {
-  owners      = ["186769093804", "055081916963"]
+  owners      = ["651974166650", "186769093804", "055081916963"]
   most_recent = true
 
   filter {
