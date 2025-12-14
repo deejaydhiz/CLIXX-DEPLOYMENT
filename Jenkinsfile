@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   parameters {
-    choice choices: ['APPLY', 'DESTROY'], name: 'Apply or Destroy'
+    choice choices: ['apply', 'destroy'], name: 'DEPLOY'
     booleanParam(name: 'DESTROY', defaultValue: false)
     string defaultValue: 'DEJI', name: 'RUNNER'
   }
@@ -35,20 +35,26 @@ pipeline {
 
     stage('Terraform Apply'){
       steps {
-        sh "terraform apply -input=false tfplan" 
-        slackSend (color: '#0400ffff', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        script {
+          if (params.DEPLOY == 'apply') 
+            sh "terraform apply -input=false tfplan" 
+            slackSend (color: '#0400ffff', message: "FINISHED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+          } else if (params.DEPLOY == 'destroy') {
+            sh "terraform destroy -auto-approve"
+            slackSend (color: '#ff000dff', message: "DESTROYED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
+        }
       }
     }
 
-    stage('Terraform Destroy'){
-      when {
-        expression { params.DESTROY }
-      }
-      steps {
-        sh "terraform destroy -auto-approve"
-        slackSend (color: '#ff000dff', message: "DESTROYED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
-      }
-    }
+    // stage('Terraform Destroy'){
+    //   when {
+    //     expression { params.DESTROY }
+    //   }
+    //   steps {
+    //     sh "terraform destroy -auto-approve"
+    //     slackSend (color: '#ff000dff', message: "DESTROYED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
+    //   }
+    // }
   }
 }
 
