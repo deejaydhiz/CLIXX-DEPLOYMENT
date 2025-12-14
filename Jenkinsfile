@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   parameters {
-    // credentials credentialType: 'com.cloudbees.jenkins.plugins.awscredentials.AWSCredentialsImpl', defaultValue: 'stack_prog_aut', name: 'AWS', required: false
+    choice choices: ['APPLY', 'DESTROY'], name: 'Apply or Destroy'
     booleanParam(name: 'DESTROY', defaultValue: false)
     string defaultValue: 'DEJI', name: 'RUNNER'
   }
@@ -14,7 +14,7 @@ pipeline {
   stages {
     stage('Terraform init') {
       steps {
-        slackSend (color: '#d0ff00ff', message: "${params.RUNNER} STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+        slackSend (color: '#ff9900ff', message: "${params.RUNNER} STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
         sh 'terraform init'
       }
     }
