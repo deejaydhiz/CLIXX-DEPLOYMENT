@@ -40,12 +40,6 @@ resource "aws_route_table_association" "public-rt-assoc" {
   route_table_id = aws_route_table.public-rt.id
 } 
 
-# resource "aws_route" "public-rt-route" {
-#   route_table_id         = aws_route_table.public-rt.id
-#   destination_cidr_block = "0.0.0.0/0"
-#   gateway_id             = aws_internet_gateway.igw.id
-# }
-
 # Create the elastic IP for the nat gateway
 resource "aws_eip" "nat_eip" {
   domain = "vpc"
@@ -81,12 +75,6 @@ resource "aws_route_table" "private-rt" {
   }
   tags = { Name = "${var.project_name}-private-rt" }
 }
-
-# resource "aws_route" "private-rt-route" {
-#   route_table_id         = aws_route_table.private-rt.id
-#   destination_cidr_block = "0.0.0.0/0"
-#   nat_gateway_id         = aws_nat_gateway.this.id
-# }
 
 # Associate private route
 resource "aws_route_table_association" "private-rt-assoc" {

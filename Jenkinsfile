@@ -13,27 +13,6 @@ pipeline {
   }
 
   stages {
-    stage('Packer AMI Build'){
-      when {
-        expression { params.BUILD_AMI }
-      }
-      steps {
-        withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: params.AWS, accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
-        ]) {
-          slackSend (color: '#ffae00ff', message: "STARTING PACKER IMAGE BUILD: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). Initiated by ${params.RUNNER}")
-          sh '''
-          packer init -upgrade .
-          packer validate golden_img.pkr.hcl
-          sed -i "s/deji-stack-ami-[0-9]*/deji-stack-ami-${BUILD_NUMBER}/" ./golden_img.pkr.hcl
-          export PACKER_LOG=1
-          export PACKER_LOG_PATH=$WORKSPACE/packer.log
-          /usr/bin/packer build -force golden_img.pkr.hcl 
-          '''    
-        }
-      }
-    }
-
     stage('terraform init') {
       steps {
         slackSend (color: '#d0ff00ff', message: "${params.RUNNER} STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
