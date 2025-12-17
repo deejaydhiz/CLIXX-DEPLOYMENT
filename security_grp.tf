@@ -2,7 +2,7 @@
 resource "aws_security_group" "public_sg" {
   name        = "${var.project_name}-public-sg"
   description = "Allow SSH/HTTP from Internet"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = aws_vpc.deployment_vpc.id
 
   ingress {
     description = "SSH"
@@ -35,7 +35,7 @@ resource "aws_security_group" "public_sg" {
 resource "aws_security_group" "app_sg" {
   name        = "${var.project_name}-app-sg"
   description = "Security group for application servers (private subnets)"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = aws_vpc.deployment_vpc.id
 
   # Allow SSH from admin CIDR (optional). For now only allow SSH from public SG (bastion).
   ingress {
@@ -69,7 +69,7 @@ resource "aws_security_group" "app_sg" {
 resource "aws_security_group" "rds_sg" {
   name        = "${var.project_name}-rds-sg"
   description = "Allow DB access from app servers"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = aws_vpc.deployment_vpc.id
 
   ingress {
     description     = "DB access from App servers"
@@ -93,7 +93,7 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_security_group" "efs_sg" {
   name        = "${var.project_name}-efs-sg"
   description = "Allow NFS (EFS) traffic from app servers"
-  vpc_id      = aws_vpc.this.id
+  vpc_id      = aws_vpc.deployment_vpc.id
 
   ingress {
     description     = "NFS from App servers"

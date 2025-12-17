@@ -4,15 +4,31 @@ output "my_public_ip_address" {
 }
 
 output "vpc_id" {
-  value = aws_vpc.this.id
+  value = aws_vpc.deployment_vpc.id
 }
 
 output "public_subnet_ids" {
-  value = aws_subnet.public_sub[*].id
+  value = [for s in aws_subnet.public_subnet : s.id]
 }
 
-output "private_subnet_ids" {
-  value = aws_subnet.private_sub[*].id
+output "app_subnet_ids" {
+  value = [for s in aws_subnet.app_subnet : s.id]
+}
+
+output "rds_subnet_ids" {
+  value = [for s in aws_subnet.rds_subnet : s.id]
+}
+
+output "oracle_db_subnet_ids" {
+  value = [for s in aws_subnet.oracle_db_subnet : s.id]
+}
+
+output "java_app_subnet_ids" {
+  value = [for s in aws_subnet.java_app_subnet : s.id]
+}
+
+output "java_app_db_subnet_ids" {
+  value = [for s in aws_subnet.java_app_db_subnet : s.id]
 }
 
 output "public_security_group_id" {
@@ -35,6 +51,6 @@ output "efs_id" {
   value = aws_efs_file_system.this.id
 }
 
-# output "bastion_server_dns" {
-#   value = aws_instance.bastion.public_dns
-# }
+output "bastion_server_dns" {
+  value = aws_instance.bastion.public_dns
+}

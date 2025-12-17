@@ -68,6 +68,10 @@ variable "ec2_properties" {
   }
 }
 
+variable "ami_name" {
+  default = "ami-stack-14"
+}
+
 variable "public_key_path" {
   description = "Path to the public key file (.pub) used to create the AWS key pair."
   type        = string
@@ -95,14 +99,29 @@ variable "azs" {
 
 variable "public_subnet_cidr" {
   type    = list(string)
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  default = ["10.0.2.0/23", "10.0.4.0/23"]
 }
 
-variable "private_subnet_cidr" {
+variable "app_subnet_cidr" {
   type    = list(string)
-  default = ["10.0.11.0/24", "10.0.12.0/24"]
+  default = ["10.0.10.0/24", "10.0.11.0/24"]
 }
 
-variable "ami_name" {
-  default = "ami-stack-14"
+variable "multi_az_rds_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.20.0/22", "10.0.24.0/22"]
+}
+
+variable "oracle_db_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.30.0/24", "10.0.31.0/24"]
+}
+variable "java_app_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.40.0/26", "10.0.41.0/26"]
+}
+
+variable "java_app_db_subnet_cidr" {
+  type    = list(string)
+  default = ["10.0.42.0/26", "10.0.43.0/26"]
 }

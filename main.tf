@@ -18,9 +18,11 @@ resource "aws_efs_file_system" "this" {
 
 ### Attach EFS to mount targets in each az for high availability ###
 resource "aws_efs_mount_target" "subnet_mounts" {
-  count           = length(aws_subnet.private_sub)
+  # count           = length(aws_subnet.private_sub)
+  for_each        = aws_subnet.app_subnet 
+
   file_system_id  = aws_efs_file_system.this.id
-  subnet_id       = aws_subnet.private_sub[count.index].id
+  subnet_id       = each.value.id
   security_groups = [aws_security_group.efs_sg.id]
 }
 
@@ -29,7 +31,7 @@ resource "aws_lb" "this" {
   name                = "${var.project_name}-lb"
   load_balancer_type  = "application"
   security_groups     = [aws_security_group.public_sg.id]
-  subnets             = [for subnet in aws_subnet.public_sub : subnet.id]
+  subnets             = [for subnet in aws_subnet.public_subnet : subnet.id]
   tags                = var.tags
 }
 
@@ -38,7 +40,7 @@ resource "aws_lb_target_group" "this" {
   name     = "${var.project_name}-lb-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.this.id
+  vpc_id   = aws_vpc.deployment_vpc.id
 }
 
 ### LB listener, forwards HTTP requests to target group ###
@@ -55,12 +57,13 @@ resource "aws_lb_listener" "this" {
 
 ### Create Auto Scaling Group ###
 resource "aws_autoscaling_group" "this" {
-  vpc_zone_identifier = [ aws_subnet.private_sub[0].id, aws_subnet.private_sub[1].id ]
-  name               = "${var.project_name}-asg"
-  desired_capacity   = 1
-  max_size           = 2
-  min_size           = 1
-  target_group_arns  = [ aws_lb_target_group.this.arn ]
+  # vpc_zone_identifier = [ aws_subnet.private_sub[0].id, aws_subnet.private_sub[1].id ]
+  vpc_zone_identifier = [ for subnet in aws_subnet.app_subnet : subnet.id ]
+  name                = "${var.project_name}-asg"
+  desired_capacity    = 1
+  max_size            = 2
+  min_size            = 1
+  target_group_arns   = [ aws_lb_target_group.this.arn ]
   
   depends_on = [ aws_db_instance.this ]
 
@@ -91,12 +94,18 @@ resource "aws_key_pair" "this" {
   public_key = file(var.public_key_path)
 }
 
-### Resolve Load Balancer DNS to our Route 53 domain ###
+### Create a Route53 record for Load Balancer DNS with my hosted zone ###
 resource "aws_route53_record" "this" {
   provider = aws.management
   zone_id  = data.aws_route53_zone.mydns.zone_id
   name     = "${var.project_name}.${data.aws_route53_zone.mydns.name}"
   type     = "A"
+  
+  latency_routing_policy {
+    region = var.aws_region
+  }
+
+  set_identifier = "${var.project_name}.com"
 
   alias {
     name                   = aws_lb.this.dns_name
@@ -105,28 +114,21 @@ resource "aws_route53_record" "this" {
   } 
 }
 
-# # Create one EC2 instance (Bastion) for debugging
-# resource "aws_instance" "bastion" {
-#   ami           = data.aws_ami.amazon_linux.id
-#   instance_type = var.ec2_properties.instance_type
-#   subnet_id     = aws_subnet.public_sub[0].id
-#   key_name      = "${var.project_name}-kp"
-#   vpc_security_group_ids = [
-#     aws_security_group.public_sg.id
-#   ]
+# Create one EC2 instance (Bastion) for debugging
+resource "aws_instance" "bastion" {
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = var.ec2_properties.instance_type
+  subnet_id                   = aws_subnet.public_subnet["us-east-1a"].id
+  key_name                    = "${var.project_name}-kp"
+  vpc_security_group_ids      = [ aws_security_group.public_sg.id ]
+  associate_public_ip_address = true
 
-#   associate_public_ip_address = true
+  user_data = <<EOF
+  #!/bin/bash
+  dnf install java-17-amazon-corretto-devel -y
+  EOF
 
-#   user_data = <<EOF
-# #!/bin/bash
-# yum update -y
-# yum install -y httpd
-# systemctl enable httpd
-# systemctl start httpd
-# echo "Web server is running" > /var/www/html/index.html
-# EOF
-
-#   tags = {
-#     Name = "${var.project_name}-web-server"
-#   }
-# }
+  tags = {
+    Name = "${var.project_name}-bastion-server"
+  }
+}
