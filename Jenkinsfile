@@ -47,7 +47,6 @@ pipeline {
         }
       }
     }
-
     // stage('Terraform Destroy'){
     //   when {
     //     expression { params.DESTROY }
